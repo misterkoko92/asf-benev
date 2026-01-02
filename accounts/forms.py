@@ -1,4 +1,5 @@
 from django import forms
+from django.db import transaction
 from django.contrib.auth.forms import AuthenticationForm, UserChangeForm, UserCreationForm
 
 from volunteers.models import VolunteerProfile
@@ -75,22 +76,23 @@ class SignupForm(forms.Form):
         return cleaned
 
     def save(self):
-        email = self.cleaned_data["email"]
-        user = User.objects.create_user(
-            email=email,
-            password=self.cleaned_data["password1"],
-            first_name=self.cleaned_data["first_name"],
-            last_name=self.cleaned_data["last_name"],
-        )
-        phone = format_phone(self.cleaned_data.get("phone_country"), self.cleaned_data.get("phone_number"))
-        VolunteerProfile.objects.create(
-            user=user,
-            phone=phone,
-            address_line1=self.cleaned_data["address_line1"],
-            postal_code=self.cleaned_data["postal_code"],
-            city=self.cleaned_data["city"],
-            country=self.cleaned_data["country"],
-            geo_latitude=self.cleaned_data.get("geo_latitude") or None,
-            geo_longitude=self.cleaned_data.get("geo_longitude") or None,
-        )
-        return user
+        with transaction.atomic():
+            email = self.cleaned_data["email"]
+            user = User.objects.create_user(
+                email=email,
+                password=self.cleaned_data["password1"],
+                first_name=self.cleaned_data["first_name"],
+                last_name=self.cleaned_data["last_name"],
+            )
+            phone = format_phone(self.cleaned_data.get("phone_country"), self.cleaned_data.get("phone_number"))
+            VolunteerProfile.objects.create(
+                user=user,
+                phone=phone,
+                address_line1=self.cleaned_data["address_line1"],
+                postal_code=self.cleaned_data["postal_code"],
+                city=self.cleaned_data["city"],
+                country=self.cleaned_data["country"],
+                geo_latitude=self.cleaned_data.get("geo_latitude") or None,
+                geo_longitude=self.cleaned_data.get("geo_longitude") or None,
+            )
+            return user

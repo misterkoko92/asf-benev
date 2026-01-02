@@ -42,6 +42,30 @@ def _next_monday(today):
     return today + timedelta(days=days_ahead)
 
 
+def _max_iso_week(year: int) -> int:
+    # 28 Dec is always in the last ISO week of the year.
+    return date(year, 12, 28).isocalendar().week
+
+
+def _iter_week_ranges(year: int):
+    for week in range(1, _max_iso_week(year) + 1):
+        start = date.fromisocalendar(year, week, 1)
+        yield week, start, start + timedelta(days=6)
+
+
+def _build_week_days(week_start: date):
+    days = []
+    for offset in range(7):
+        day_date = week_start + timedelta(days=offset)
+        days.append(
+            {
+                "date": day_date,
+                "label": f"{DAY_NAMES[offset]} {day_date.strftime('%d/%m/%Y')}",
+            }
+        )
+    return days
+
+
 def _resolve_week_start(request):
     if request.method == "POST":
         value = request.POST.get("week_start")
@@ -59,10 +83,12 @@ def _resolve_week_start(request):
     except ValueError:
         year_value = base.isocalendar().year
 
+    max_week = _max_iso_week(year_value)
+
     if week_param:
         try:
             week_value = int(week_param)
-            if 1 <= week_value <= 52:
+            if 1 <= week_value <= max_week:
                 return date.fromisocalendar(year_value, week_value, 1)
         except ValueError:
             pass
@@ -156,33 +182,21 @@ def availability_list(request):
 @login_required
 def availability_recap(request):
     week_start = _resolve_week_start(request)
-    week_end = week_start + timedelta(days=6)
     week_meta = week_start.isocalendar()
     week_number = week_meta.week
     week_year = week_meta.year
+    week_days = _build_week_days(week_start)
+    week_end = week_days[-1]["date"]
 
-    week_days = []
-    for offset in range(7):
-        day_date = week_start + timedelta(days=offset)
-        week_days.append(
-            {
-                "date": day_date,
-                "label": f"{DAY_NAMES[offset]} {day_date.strftime('%d/%m/%Y')}",
-            }
-        )
-
-    week_options = []
-    for week in range(1, 53):
-        start = date.fromisocalendar(week_year, week, 1)
-        end = start + timedelta(days=6)
-        week_options.append(
-            {
-                "week": week,
-                "start": start,
-                "end": end,
-                "label": f"Semaine {week} - du lundi {start.strftime('%d/%m/%Y')} au dimanche {end.strftime('%d/%m/%Y')}",
-            }
-        )
+    week_options = [
+        {
+            "week": week,
+            "start": start,
+            "end": end,
+            "label": f"Semaine {week} - du lundi {start.strftime('%d/%m/%Y')} au dimanche {end.strftime('%d/%m/%Y')}",
+        }
+        for week, start, end in _iter_week_ranges(week_year)
+    ]
 
     availability_rows = (
         Availability.objects.filter(date__range=(week_start, week_end))
@@ -264,16 +278,14 @@ def availability_create(request):
         return render(request, "volunteers/missing_profile.html", status=400)
 
     week_start = _resolve_week_start(request)
-    week_dates = [week_start + timedelta(days=offset) for offset in range(7)]
-    day_labels = [
-        f"{DAY_NAMES[index]} {date.strftime('%d/%m/%Y')}"
-        for index, date in enumerate(week_dates)
-    ]
+    week_days = _build_week_days(week_start)
+    week_dates = [day["date"] for day in week_days]
+    day_labels = [day["label"] for day in week_days]
     week_meta = week_start.isocalendar()
     week_number = week_meta.week
     week_year = week_meta.year
     week_end = week_start + timedelta(days=6)
-    week_options = list(range(1, 53))
+    week_options = [week for week, _start, _end in _iter_week_ranges(week_year)]
 
     AvailabilityWeekFormSet = formset_factory(AvailabilityWeekForm, extra=0)
 

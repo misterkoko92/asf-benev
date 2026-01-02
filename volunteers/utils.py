@@ -16,7 +16,7 @@ PHONE_COUNTRY_CHOICES = [
 def generate_short_name(first_name: str) -> str:
     if not first_name:
         return ""
-    parts = re.split(r"[-\\s']+", first_name.strip())
+    parts = re.split(r"[-\s']+", first_name.strip())
     parts = [part for part in parts if part]
     if not parts:
         return ""
@@ -38,7 +38,7 @@ def split_phone(phone: str) -> tuple[str, str]:
 
 
 def normalize_phone_number(number: str) -> str:
-    return re.sub(r"\\s+", "", number or "")
+    return re.sub(r"\s+", "", number or "")
 
 
 def format_phone(country: str, number: str) -> str:
