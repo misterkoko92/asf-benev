@@ -1,0 +1,12 @@
+Bonjour {{ display_name }},
+
+Votre compte benevole est pret.
+Pour definir votre mot de passe, cliquez sur ce lien :
+{{ invite_link }}
+
+Identifiant benevole : {{ volunteer_id }}
+
+Une fois le mot de passe defini, connectez-vous ici :
+{{ login_link }}
+
+Si vous n'etes pas concerne par cette demande, ignorez ce message.

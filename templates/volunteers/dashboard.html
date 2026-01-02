@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Tableau de bord | ASF Benev{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div>
+    <h1>Bonjour {{ profile.user.first_name|default:profile.user.email }}</h1>
+    <p>Votre identifiant benevole: <strong>#{{ profile.volunteer_id }}</strong></p>
+  </div>
+  <div class="hero-actions">
+    <a class="button" href="{% url 'volunteer-availability-create' %}">Ajouter une disponibilite</a>
+    <a class="button ghost" href="{% url 'volunteer-profile' %}">Mettre a jour mes coordonnees</a>
+  </div>
+</section>
+
+<section class="grid two">
+  <div class="card">
+    <h2>Mes disponibilites recentes</h2>
+    {% if recent_availabilities %}
+      <ul class="list">
+        {% for availability in recent_availabilities %}
+        <li>
+          <span>
+            {{ availability.date|date:"l"|capfirst }} - {{ availability.date|date:"d/m/Y" }} -
+            {{ availability.start_time|time:"H" }}h{{ availability.start_time|time:"i" }} à
+            {{ availability.end_time|time:"H" }}h{{ availability.end_time|time:"i" }}
+          </span>
+          <a href="{% url 'volunteer-availability-edit' availability.pk %}">Modifier</a>
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Aucune disponibilite pour le moment.</p>
+    {% endif %}
+  </div>
+  <div class="card">
+    <h2>Raccourcis</h2>
+    <ul class="list">
+      <li><a href="{% url 'volunteer-availabilities' %}">Voir toutes mes disponibilites</a></li>
+      <li><a href="{% url 'volunteer-constraints' %}">Gerer mes contraintes</a></li>
+      <li><a href="{% url 'volunteer-profile' %}">Mettre a jour mes coordonnees</a></li>
+    </ul>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | ASF Benev{% endblock %}
+
+{% block content %}
+<section class="card">
+  <h1>{{ title }}</h1>
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-grid">
+      {{ form.non_field_errors }}
+      <label class="{% if form.date.errors %}field-error{% endif %}">
+        <span>Date</span>
+        {{ form.date }}
+        {% for error in form.date.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
+      </label>
+      <label class="{% if form.start_time.errors %}field-error{% endif %}">
+        <span>Heure premier vol</span>
+        {{ form.start_time }}
+        {% for error in form.start_time.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
+      </label>
+      <label class="{% if form.end_time.errors %}field-error{% endif %}">
+        <span>Heure dernier vol</span>
+        {{ form.end_time }}
+        {% for error in form.end_time.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
+      </label>
+    </div>
+    <div class="form-actions">
+      <button class="button" type="submit">Enregistrer</button>
+      <a class="button ghost" href="{% url 'volunteer-availabilities' %}">Annuler</a>
+    </div>
+  </form>
+</section>
+
+<script>
+  const startSelect = document.querySelector("select[name='start_time']");
+  const endSelect = document.querySelector("select[name='end_time']");
+
+  const parseMinutes = (value) => {
+    if (!value) {
+      return null;
+    }
+    const parts = value.split(":");
+    if (parts.length < 2) {
+      return null;
+    }
+    return Number(parts[0]) * 60 + Number(parts[1]);
+  };
+
+  const updateEndOptions = () => {
+    if (!startSelect || !endSelect) {
+      return;
+    }
+    const startMinutes = parseMinutes(startSelect.value);
+    endSelect.querySelectorAll("option").forEach((option) => {
+      option.disabled = false;
+    });
+
+    if (startMinutes === null) {
+      endSelect.value = "";
+      endSelect.disabled = true;
+      return;
+    }
+
+    endSelect.disabled = false;
+    endSelect.querySelectorAll("option").forEach((option) => {
+      if (!option.value) {
+        option.disabled = false;
+        return;
+      }
+      const optionMinutes = parseMinutes(option.value);
+      option.disabled = optionMinutes <= startMinutes;
+    });
+
+    if (endSelect.value && parseMinutes(endSelect.value) <= startMinutes) {
+      endSelect.value = "";
+    }
+  };
+
+  if (startSelect && endSelect) {
+    startSelect.addEventListener("change", updateEndOptions);
+    updateEndOptions();
+  }
+</script>
+{% endblock %}

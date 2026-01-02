@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Contraintes | ASF Benev{% endblock %}
+
+{% block content %}
+<section class="card">
+  <h1>Mes contraintes</h1>
+  <p class="muted">Ces informations servent a la generation du planning.</p>
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-grid">
+      {{ form.non_field_errors }}
+      <label>
+        <span>Nombre de jours max / semaine</span>
+        {{ form.max_days_per_week }}
+      </label>
+      <label>
+        <span>Nombre de mises a bord max / semaine</span>
+        {{ form.max_expeditions_per_week }}
+      </label>
+      <label>
+        <span>Nombre de mises a bord max / jour</span>
+        {{ form.max_expeditions_per_day }}
+      </label>
+      <label>
+        <span>Attente max (heures)</span>
+        {{ form.max_wait_hours }}
+      </label>
+    </div>
+    <button class="button" type="submit">Enregistrer</button>
+  </form>
+</section>
+{% endblock %}

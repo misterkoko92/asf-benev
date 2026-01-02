@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Profil manquant | ASF Benev{% endblock %}
+
+{% block content %}
+<section class="card">
+  <h1>Profil introuvable</h1>
+  <p>Votre compte est actif mais aucun profil benevole n'est rattache. Contactez un administrateur pour finaliser votre creation.</p>
+  <a class="button" href="{% url 'logout' %}">Se deconnecter</a>
+</section>
+{% endblock %}

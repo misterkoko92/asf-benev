@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Connexion | ASF Benev{% endblock %}
+
+{% block content %}
+<section class="card auth">
+  <h1>Connexion benevole</h1>
+  <p>Accedez a votre espace pour declarer vos disponibilites.</p>
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-grid">
+      {{ form.non_field_errors }}
+      <label>
+        <span>Mail</span>
+        {{ form.username }}
+      </label>
+      <label>
+        <span>Mot de passe</span>
+        {{ form.password }}
+      </label>
+    </div>
+    <button class="button" type="submit">Se connecter</button>
+  </form>
+  <p class="muted"><a href="{% url 'password_reset' %}">Mot de passe oublie ?</a></p>
+</section>
+{% endblock %}

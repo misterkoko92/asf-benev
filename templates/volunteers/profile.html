@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Coordonnees | ASF Benev{% endblock %}
+
+{% block content %}
+<section class="card">
+  <h1>Mes coordonnees</h1>
+  <p class="muted">Identifiant benevole: <strong>#{{ profile.volunteer_id }}</strong></p>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-grid">
+      {{ account_form.non_field_errors }}
+      {{ profile_form.non_field_errors }}
+      <label>
+        <span>Mail</span>
+        {{ account_form.email }}
+      </label>
+      <label>
+        <span>Prenom</span>
+        {{ account_form.first_name }}
+      </label>
+      <label>
+        <span>Nom</span>
+        {{ account_form.last_name }}
+      </label>
+      <label>
+        <span>Prenom court</span>
+        {{ profile_form.short_name }}
+      </label>
+      <label>
+        <span>Telephone</span>
+        {{ profile_form.phone }}
+      </label>
+    </div>
+    <button class="button" type="submit">Enregistrer</button>
+  </form>
+</section>
+{% endblock %}

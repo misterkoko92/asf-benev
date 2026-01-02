@@ -1,0 +1,50 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}ASF Benev{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=5">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">ASF</span>
+        <span class="brand-text">Portail benevole</span>
+      </div>
+      {% if user.is_authenticated %}
+      <nav class="nav">
+        <a href="{% url 'volunteer-dashboard' %}">Tableau de bord</a>
+        <a href="{% url 'volunteer-availabilities' %}">Disponibilites</a>
+        <a href="{% url 'volunteer-profile' %}">Coordonnees</a>
+        <a href="{% url 'volunteer-constraints' %}">Contraintes</a>
+        {% if user.is_staff %}
+        <a href="/admin/" class="nav-admin">Admin</a>
+        {% endif %}
+      </nav>
+      <div class="nav-user">
+        <span>{{ user.full_name|default:user.email }}</span>
+        <a class="button ghost" href="{% url 'logout' %}">Deconnexion</a>
+      </div>
+      {% endif %}
+    </header>
+
+    {% if messages %}
+    <section class="flash">
+      {% for message in messages %}
+      <div class="flash-item {{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Disponibilites | ASF Benev{% endblock %}
+
+{% block content %}
+<section class="card">
+  <div class="card-header">
+    <div>
+      <h1>Mes disponibilites</h1>
+      <p class="muted">Plusieurs plages horaires par jour sont possibles.</p>
+    </div>
+    <a class="button" href="{% url 'volunteer-availability-create' %}">Ajouter</a>
+  </div>
+
+  {% if availabilities %}
+  <div class="table">
+    <div class="table-row table-head">
+      <span>Date</span>
+      <span>Heure premier vol</span>
+      <span>Heure dernier vol</span>
+      <span></span>
+    </div>
+    {% for availability in availabilities %}
+    <div class="table-row">
+      <span>{{ availability.date }}</span>
+      <span>{{ availability.start_time }}</span>
+      <span>{{ availability.end_time }}</span>
+      <span class="table-actions">
+        <a href="{% url 'volunteer-availability-edit' availability.pk %}">Modifier</a>
+        <a href="{% url 'volunteer-availability-delete' availability.pk %}" class="danger">Supprimer</a>
+      </span>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    <p>Aucune disponibilite pour le moment.</p>
+  {% endif %}
+</section>
+{% endblock %}

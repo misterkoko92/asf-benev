@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | ASF Benev{% endblock %}
+
+{% block content %}
+<section class="card">
+  <div class="card-header">
+    <div>
+      <h1>{{ title }}</h1>
+      <p class="muted">Semaine {{ week_number }} (du lundi {{ week_start|date:"d/m/y" }} au dimanche {{ week_end|date:"d/m/y" }})</p>
+    </div>
+    <form class="week-selector" method="get">
+      <label>
+        <span>Semaine</span>
+        <select name="week">
+          {% for week in week_options %}
+            <option value="{{ week }}" {% if week == week_number %}selected{% endif %}>{{ week }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <input type="hidden" name="year" value="{{ week_year }}">
+      <button class="button ghost" type="submit">Aller</button>
+    </form>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    <input type="hidden" name="week_start" value="{{ week_start|date:"Y-m-d" }}">
+
+    <div class="week-list">
+      {% for form in formset %}
+      <div class="week-row" data-week-row>
+        <div class="day-label"><strong>{{ form.day_label }}</strong></div>
+        <div class="availability-options">
+          {% for radio in form.availability %}
+            <label class="radio-option">
+              {{ radio.tag }}
+              <span>{{ radio.choice_label }}</span>
+            </label>
+          {% endfor %}
+        </div>
+        <div class="time-fields {% if form.availability.value != 'available' %}is-hidden{% endif %}" data-time-fields>
+          <label class="time-field {% if form.start_time.errors %}field-error{% endif %}">
+            <span class="time-label">Heure premier vol</span>
+            {{ form.start_time }}
+            {% for error in form.start_time.errors %}
+              <span class="error-text">{{ error }}</span>
+            {% endfor %}
+          </label>
+          <label class="time-field {% if form.end_time.errors %}field-error{% endif %}">
+            <span class="time-label">Heure dernier vol</span>
+            {{ form.end_time }}
+            {% for error in form.end_time.errors %}
+              <span class="error-text">{{ error }}</span>
+            {% endfor %}
+          </label>
+        </div>
+        {{ form.date }}
+        {% if form.non_field_errors %}
+          <div class="row-errors">
+            {% for error in form.non_field_errors %}
+              <span class="error-text">{{ error }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="form-actions">
+      <button class="button" type="submit">Enregistrer</button>
+      <a class="button ghost" href="{% url 'volunteer-availabilities' %}">Annuler</a>
+    </div>
+  </form>
+</section>
+
+<script>
+  const weekSelect = document.querySelector(".week-selector select");
+  if (weekSelect) {
+    weekSelect.addEventListener("change", () => {
+      weekSelect.form.submit();
+    });
+  }
+
+  document.querySelectorAll("[data-week-row]").forEach((row) => {
+    const timeFields = row.querySelector("[data-time-fields]");
+    const radios = row.querySelectorAll("input[type='radio']");
+    const startSelect = row.querySelector("select[name$='start_time']");
+    const endSelect = row.querySelector("select[name$='end_time']");
+
+    const parseMinutes = (value) => {
+      if (!value) {
+        return null;
+      }
+      const parts = value.split(":");
+      if (parts.length < 2) {
+        return null;
+      }
+      return Number(parts[0]) * 60 + Number(parts[1]);
+    };
+
+    const updateEndOptions = () => {
+      if (!startSelect || !endSelect) {
+        return;
+      }
+      const startMinutes = parseMinutes(startSelect.value);
+      if (startMinutes === null) {
+        endSelect.value = "";
+        endSelect.disabled = true;
+        endSelect.querySelectorAll("option").forEach((option) => {
+          option.disabled = false;
+        });
+        return;
+      }
+
+      endSelect.disabled = false;
+      endSelect.querySelectorAll("option").forEach((option) => {
+        option.disabled = false;
+      });
+      endSelect.querySelectorAll("option").forEach((option) => {
+        if (!option.value) {
+          option.disabled = false;
+          return;
+        }
+        const optionMinutes = parseMinutes(option.value);
+        option.disabled = optionMinutes <= startMinutes;
+      });
+
+      if (endSelect.value && parseMinutes(endSelect.value) <= startMinutes) {
+        endSelect.value = "";
+      }
+    };
+
+    const toggle = () => {
+      const available = row.querySelector("input[type='radio'][value='available']");
+      if (available && available.checked) {
+        timeFields.classList.remove("is-hidden");
+        if (startSelect) {
+          startSelect.disabled = false;
+        }
+        updateEndOptions();
+      } else {
+        timeFields.classList.add("is-hidden");
+        if (startSelect) {
+          startSelect.disabled = true;
+        }
+        if (endSelect) {
+          endSelect.disabled = true;
+        }
+        if (startSelect) {
+          startSelect.value = "";
+        }
+        if (endSelect) {
+          endSelect.value = "";
+        }
+      }
+    };
+
+    radios.forEach((radio) => {
+      radio.addEventListener("change", toggle);
+    });
+
+    if (startSelect) {
+      startSelect.addEventListener("change", updateEndOptions);
+    }
+
+    toggle();
+  });
+</script>
+{% endblock %}

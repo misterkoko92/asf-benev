@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Supprimer | ASF Benev{% endblock %}
+
+{% block content %}
+<section class="card">
+  <h1>Supprimer une disponibilite</h1>
+  <p>Confirmez-vous la suppression de la disponibilite du {{ availability.date }} de {{ availability.start_time }} a {{ availability.end_time }} ?</p>
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-actions">
+      <button class="button danger" type="submit">Supprimer</button>
+      <a class="button ghost" href="{% url 'volunteer-availabilities' %}">Annuler</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
