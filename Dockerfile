@@ -12,4 +12,4 @@ COPY . .
 
 RUN python manage.py collectstatic --noinput
 
-CMD ["bash", "-c", "python manage.py migrate && gunicorn asf_benev.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]
+CMD ["bash", "-c", "python manage.py migrate && python manage.py ensure_admin && gunicorn asf_benev.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]

@@ -77,6 +77,15 @@ gunicorn asf_benev.wsgi:application
 
 Ensuite, partager le lien public (sous-domaine) a tous les benevoles.
 
+Sur Render (free, sans shell), les migrations et la creation d'admin sont lancees automatiquement par le conteneur si vous renseignez :
+```
+DJANGO_SUPERUSER_EMAIL=admin@exemple.org
+DJANGO_SUPERUSER_PASSWORD=MotDePasseSolide
+DJANGO_SUPERUSER_FIRST_NAME=Admin
+DJANGO_SUPERUSER_LAST_NAME=ASF
+```
+Le superuser est cree si besoin (commande `ensure_admin`).
+
 ## Import Excel / CSV
 ```bash
 python3 manage.py import_volunteers /chemin/volunteers.xlsx --default-password "TempPass123"
@@ -112,6 +121,8 @@ Options utiles :
 - `--dry-run` pour verifier les liens
 - `--emails mail1@mail.com mail2@mail.com` pour cibler
 - `--volunteer-ids 7 16 8` pour cibler
+
+Si Render n'a pas de shell, lancez ces commandes en local en pointant vers la base Neon (variables DB_*) et en configurant SMTP (EMAIL_*).
 
 ## RGPD (bonnes pratiques)
 - Donnees strictement necessaires (coordonnees, contraintes, disponibilites).
