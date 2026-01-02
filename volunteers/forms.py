@@ -4,6 +4,7 @@ from django import forms
 
 from accounts.models import User
 from .models import Availability, VolunteerConstraint, VolunteerProfile
+from .utils import PHONE_COUNTRY_CHOICES, format_phone, normalize_phone_number, split_phone
 
 MIN_TIME = time(7, 0)
 MAX_TIME = time(22, 0)
@@ -31,15 +32,68 @@ class AccountForm(forms.ModelForm):
             "email": forms.EmailInput(attrs={"type": "email"}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["first_name"].required = True
+        self.fields["last_name"].required = True
+
 
 class VolunteerProfileForm(forms.ModelForm):
+    phone_country = forms.ChoiceField(
+        choices=PHONE_COUNTRY_CHOICES,
+        label="Indicatif",
+        initial="+33",
+    )
+    phone_number = forms.CharField(
+        label="Numero de telephone",
+        help_text="format attendu : +33 601020304",
+    )
+
     class Meta:
         model = VolunteerProfile
-        fields = ["short_name", "phone"]
+        fields = [
+            "address_line1",
+            "postal_code",
+            "city",
+            "country",
+            "geo_latitude",
+            "geo_longitude",
+        ]
         labels = {
-            "short_name": "Prenom court",
-            "phone": "Telephone",
+            "address_line1": "Rue",
+            "postal_code": "Code postal",
+            "city": "Ville",
+            "country": "Pays",
         }
+        widgets = {
+            "geo_latitude": forms.HiddenInput(),
+            "geo_longitude": forms.HiddenInput(),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        country, number = split_phone(self.instance.phone if self.instance else "")
+        self.fields["phone_country"].initial = country
+        self.fields["phone_number"].initial = number
+        self.fields["address_line1"].required = True
+        self.fields["postal_code"].required = True
+        self.fields["city"].required = True
+        self.fields["country"].required = True
+
+    def clean_phone_number(self):
+        number = normalize_phone_number(self.cleaned_data.get("phone_number"))
+        if not number or not number.isdigit():
+            raise forms.ValidationError("Numero invalide.")
+        return number
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        country = self.cleaned_data.get("phone_country", "+33")
+        number = self.cleaned_data.get("phone_number", "")
+        instance.phone = format_phone(country, number)
+        if commit:
+            instance.save()
+        return instance
 
 
 class VolunteerConstraintForm(forms.ModelForm):

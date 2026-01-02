@@ -3,10 +3,12 @@ from django.urls import include, path, reverse_lazy
 from django.contrib.auth import views as auth_views
 
 from accounts.forms import EmailAuthenticationForm
+from accounts.views import signup
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("login/", auth_views.LoginView.as_view(authentication_form=EmailAuthenticationForm), name="login"),
+    path("signup/", signup, name="signup"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path(
         "password-reset/",

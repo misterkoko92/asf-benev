@@ -6,34 +6,113 @@
 <section class="card">
   <h1>Mes coordonnees</h1>
   <p class="muted">Identifiant benevole: <strong>#{{ profile.volunteer_id }}</strong></p>
+  <p class="muted">Prenom court: <strong>{{ profile.short_name }}</strong></p>
 
   <form method="post">
     {% csrf_token %}
     <div class="form-grid">
       {{ account_form.non_field_errors }}
       {{ profile_form.non_field_errors }}
-      <label>
+      <label class="{% if account_form.email.errors %}field-error{% endif %}">
         <span>Mail</span>
         {{ account_form.email }}
+        {% for error in account_form.email.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
       </label>
-      <label>
+      <label class="{% if account_form.first_name.errors %}field-error{% endif %}">
         <span>Prenom</span>
         {{ account_form.first_name }}
+        {% for error in account_form.first_name.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
       </label>
-      <label>
+      <label class="{% if account_form.last_name.errors %}field-error{% endif %}">
         <span>Nom</span>
         {{ account_form.last_name }}
+        {% for error in account_form.last_name.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
       </label>
-      <label>
-        <span>Prenom court</span>
-        {{ profile_form.short_name }}
+      <label class="{% if profile_form.phone_country.errors %}field-error{% endif %}">
+        <span>Indicatif pays</span>
+        {{ profile_form.phone_country }}
+        {% for error in profile_form.phone_country.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
       </label>
-      <label>
-        <span>Telephone</span>
-        {{ profile_form.phone }}
+      <label class="{% if profile_form.phone_number.errors %}field-error{% endif %}">
+        <span>Numero de telephone</span>
+        {{ profile_form.phone_number }}
+        <span class="form-help">{{ profile_form.phone_number.help_text }}</span>
+        {% for error in profile_form.phone_number.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
+      </label>
+      <label class="{% if profile_form.address_line1.errors %}field-error{% endif %}">
+        <span>Rue</span>
+        {{ profile_form.address_line1 }}
+        {% for error in profile_form.address_line1.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
+      </label>
+      <label class="{% if profile_form.postal_code.errors %}field-error{% endif %}">
+        <span>Code postal</span>
+        {{ profile_form.postal_code }}
+        {% for error in profile_form.postal_code.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
+      </label>
+      <label class="{% if profile_form.city.errors %}field-error{% endif %}">
+        <span>Ville</span>
+        {{ profile_form.city }}
+        {% for error in profile_form.city.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
+      </label>
+      <label class="{% if profile_form.country.errors %}field-error{% endif %}">
+        <span>Pays</span>
+        {{ profile_form.country }}
+        {% for error in profile_form.country.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
       </label>
     </div>
+
+    <div class="geo-block">
+      <button class="button ghost" type="button" data-geo-button>Geolocaliser</button>
+      <span class="form-help" data-geo-status>Position non renseignee.</span>
+    </div>
+    {{ profile_form.geo_latitude }}
+    {{ profile_form.geo_longitude }}
     <button class="button" type="submit">Enregistrer</button>
   </form>
 </section>
+
+<script>
+  const geoButton = document.querySelector("[data-geo-button]");
+  const geoStatus = document.querySelector("[data-geo-status]");
+  const geoLat = document.querySelector("input[name='geo_latitude']");
+  const geoLng = document.querySelector("input[name='geo_longitude']");
+
+  if (geoButton && geoLat && geoLng) {
+    geoButton.addEventListener("click", () => {
+      if (!navigator.geolocation) {
+        geoStatus.textContent = "Geolocalisation non supportee.";
+        return;
+      }
+      geoStatus.textContent = "Geolocalisation en cours...";
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          geoLat.value = position.coords.latitude.toFixed(6);
+          geoLng.value = position.coords.longitude.toFixed(6);
+          geoStatus.textContent = `Position enregistree (${geoLat.value}, ${geoLng.value}).`;
+        },
+        () => {
+          geoStatus.textContent = "Impossible d'obtenir la position.";
+        }
+      );
+    });
+  }
+</script>
 {% endblock %}

@@ -1,6 +1,9 @@
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Max
 from django.utils import timezone
+
+from .utils import generate_short_name
 
 
 class VolunteerProfile(models.Model):
@@ -8,12 +11,26 @@ class VolunteerProfile(models.Model):
     volunteer_id = models.PositiveIntegerField(unique=True)
     short_name = models.CharField(max_length=30, blank=True)
     phone = models.CharField(max_length=30, blank=True)
+    address_line1 = models.CharField(max_length=255, blank=True)
+    postal_code = models.CharField(max_length=20, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    country = models.CharField(max_length=100, blank=True)
+    geo_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    geo_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
         name = self.user.full_name
         return f"{self.volunteer_id} - {name}" if name else str(self.volunteer_id)
+
+    def save(self, *args, **kwargs):
+        if not self.volunteer_id:
+            max_id = self.__class__.objects.aggregate(Max("volunteer_id")).get("volunteer_id__max") or 0
+            self.volunteer_id = max_id + 1
+        if self.user_id:
+            self.short_name = generate_short_name(self.user.first_name)
+        super().save(*args, **kwargs)
 
 
 class VolunteerConstraint(models.Model):

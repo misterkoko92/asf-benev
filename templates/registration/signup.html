@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Inscription | ASF Benev{% endblock %}
+
+{% block content %}
+<section class="card auth">
+  <h1>Creation de compte benevole</h1>
+  <p class="muted">Tous les champs sont obligatoires.</p>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <div class="form-grid">
+      <label class="{% if form.first_name.errors %}field-error{% endif %}">
+        <span>Prenom</span>
+        {{ form.first_name }}
+        {% for error in form.first_name.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
+      </label>
+      <label class="{% if form.last_name.errors %}field-error{% endif %}">
+        <span>Nom</span>
+        {{ form.last_name }}
+        {% for error in form.last_name.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
+      </label>
+      <label class="{% if form.email.errors %}field-error{% endif %}">
+        <span>Adresse mail</span>
+        {{ form.email }}
+        {% for error in form.email.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
+      </label>
+      <label class="{% if form.address_line1.errors %}field-error{% endif %}">
+        <span>Rue</span>
+        {{ form.address_line1 }}
+        {% for error in form.address_line1.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
+      </label>
+      <label class="{% if form.postal_code.errors %}field-error{% endif %}">
+        <span>Code postal</span>
+        {{ form.postal_code }}
+        {% for error in form.postal_code.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
+      </label>
+      <label class="{% if form.city.errors %}field-error{% endif %}">
+        <span>Ville</span>
+        {{ form.city }}
+        {% for error in form.city.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
+      </label>
+      <label class="{% if form.country.errors %}field-error{% endif %}">
+        <span>Pays</span>
+        {{ form.country }}
+        {% for error in form.country.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
+      </label>
+    </div>
+
+    <div class="form-grid">
+      <label class="{% if form.phone_country.errors %}field-error{% endif %}">
+        <span>Indicatif pays</span>
+        {{ form.phone_country }}
+        {% for error in form.phone_country.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
+      </label>
+      <label class="{% if form.phone_number.errors %}field-error{% endif %}">
+        <span>Numero de telephone</span>
+        {{ form.phone_number }}
+        <span class="form-help">{{ form.phone_number.help_text }}</span>
+        {% for error in form.phone_number.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
+      </label>
+    </div>
+
+    <div class="geo-block">
+      <button class="button ghost" type="button" data-geo-button>Geolocaliser</button>
+      <span class="form-help" data-geo-status>Position non renseignee.</span>
+    </div>
+    {{ form.geo_latitude }}
+    {{ form.geo_longitude }}
+
+    <div class="form-grid">
+      <label class="{% if form.password1.errors %}field-error{% endif %}">
+        <span>Mot de passe</span>
+        {{ form.password1 }}
+        {% for error in form.password1.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
+      </label>
+      <label class="{% if form.password2.errors %}field-error{% endif %}">
+        <span>Confirmation mot de passe</span>
+        {{ form.password2 }}
+        {% for error in form.password2.errors %}
+          <span class="error-text">{{ error }}</span>
+        {% endfor %}
+      </label>
+    </div>
+
+    <div class="form-actions">
+      <button class="button" type="submit">Creer mon compte</button>
+      <a class="button ghost" href="{% url 'login' %}">Retour connexion</a>
+    </div>
+  </form>
+</section>
+
+<script>
+  const geoButton = document.querySelector("[data-geo-button]");
+  const geoStatus = document.querySelector("[data-geo-status]");
+  const geoLat = document.querySelector("input[name='geo_latitude']");
+  const geoLng = document.querySelector("input[name='geo_longitude']");
+
+  if (geoButton && geoLat && geoLng) {
+    geoButton.addEventListener("click", () => {
+      if (!navigator.geolocation) {
+        geoStatus.textContent = "Geolocalisation non supportee.";
+        return;
+      }
+      geoStatus.textContent = "Geolocalisation en cours...";
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          geoLat.value = position.coords.latitude.toFixed(6);
+          geoLng.value = position.coords.longitude.toFixed(6);
+          geoStatus.textContent = `Position enregistree (${geoLat.value}, ${geoLng.value}).`;
+        },
+        () => {
+          geoStatus.textContent = "Impossible d'obtenir la position.";
+        }
+      );
+    });
+  }
+</script>
+{% endblock %}
