@@ -123,6 +123,7 @@ Options utiles :
 - `--dry-run` pour verifier les liens
 - `--emails mail1@mail.com mail2@mail.com` pour cibler
 - `--volunteer-ids 7 16 8` pour cibler
+ - `--create-missing --emails mail1@mail.com --volunteer-ids 7` pour creer un compte manquant
 
 Si Render n'a pas de shell, lancez ces commandes en local en pointant vers la base Neon (variables DB_*) et en configurant SMTP (EMAIL_*).
 
