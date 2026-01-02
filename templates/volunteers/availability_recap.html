@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Recap dispo semaine | ASF Benev{% endblock %}
+
+{% block content %}
+<section class="card">
+  <div class="card-header">
+    <div>
+      <h1>Recap dispo semaine</h1>
+      <p class="muted">Semaine {{ week_number }} (du lundi {{ week_start|date:"d/m/Y" }} au dimanche {{ week_end|date:"d/m/Y" }})</p>
+    </div>
+    <form class="week-selector" method="get">
+      <label>
+        <span>Semaine</span>
+        <select name="week" class="week-select-long">
+          {% for option in week_options %}
+            <option value="{{ option.week }}" {% if option.week == week_number %}selected{% endif %}>{{ option.label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <input type="hidden" name="year" value="{{ week_year }}">
+      <button class="button ghost" type="submit">Aller</button>
+    </form>
+  </div>
+
+  {% if recap_rows %}
+  <div class="recap-table-wrap">
+    <table class="recap-table">
+      <thead>
+        <tr>
+          <th rowspan="2">Benevole</th>
+          {% for day in week_days %}
+            <th colspan="2">{{ day.label }}</th>
+          {% endfor %}
+        </tr>
+        <tr>
+          {% for day in week_days %}
+            <th>Premier vol</th>
+            <th class="day-divider">Dernier vol</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in recap_rows %}
+        <tr>
+          <td class="recap-name">{{ row.name }}</td>
+          {% for day in row.days %}
+            <td class="recap-cell status-{{ day.status }}">{{ day.start }}</td>
+            <td class="recap-cell status-{{ day.status }} day-divider">{{ day.end }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <p>Aucun benevole a afficher.</p>
+  {% endif %}
+</section>
+
+<script>
+  const weekSelect = document.querySelector(".week-selector select");
+  if (weekSelect) {
+    weekSelect.addEventListener("change", () => {
+      weekSelect.form.submit();
+    });
+  }
+</script>
+{% endblock %}

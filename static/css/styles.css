@@ -271,6 +271,62 @@ input[type="checkbox"] {
   color: #b43d2f;
 }
 
+.recap-table-wrap {
+  margin-top: 1.5rem;
+  overflow-x: auto;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: #fff;
+}
+
+.recap-table {
+  width: 100%;
+  min-width: 1200px;
+  border-collapse: collapse;
+}
+
+.recap-table th,
+.recap-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.recap-table thead th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  background: rgba(28, 106, 91, 0.08);
+}
+
+.recap-table thead tr:first-child th {
+  background: rgba(28, 106, 91, 0.14);
+}
+
+.recap-name {
+  font-weight: 600;
+  text-align: left;
+  min-width: 200px;
+}
+
+.recap-cell.status-available {
+  background: #dff1e5;
+}
+
+.recap-cell.status-unavailable {
+  background: #f5c5c0;
+}
+
+.recap-cell.status-empty {
+  background: #fff;
+}
+
+.day-divider {
+  border-right: 1px solid var(--border);
+}
+
 .week-list {
   display: grid;
   gap: 1rem;
@@ -387,6 +443,10 @@ input[type="checkbox"] {
 
 .week-selector select {
   min-width: 140px;
+}
+
+.week-select-long {
+  min-width: 320px;
 }
 
 .time-fields.is-hidden {

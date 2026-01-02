@@ -1,7 +1,9 @@
+from collections import defaultdict
 from datetime import date, datetime, timedelta
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Max, Min
 from django.forms import formset_factory
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -13,7 +15,7 @@ from .forms import (
     VolunteerConstraintForm,
     VolunteerProfileForm,
 )
-from .models import Availability, VolunteerConstraint, VolunteerProfile
+from .models import Availability, Unavailability, VolunteerConstraint, VolunteerProfile
 
 DAY_NAMES = [
     "Lundi",
@@ -152,6 +154,110 @@ def availability_list(request):
 
 
 @login_required
+def availability_recap(request):
+    week_start = _resolve_week_start(request)
+    week_end = week_start + timedelta(days=6)
+    week_meta = week_start.isocalendar()
+    week_number = week_meta.week
+    week_year = week_meta.year
+
+    week_days = []
+    for offset in range(7):
+        day_date = week_start + timedelta(days=offset)
+        week_days.append(
+            {
+                "date": day_date,
+                "label": f"{DAY_NAMES[offset]} {day_date.strftime('%d/%m/%Y')}",
+            }
+        )
+
+    week_options = []
+    for week in range(1, 53):
+        start = date.fromisocalendar(week_year, week, 1)
+        end = start + timedelta(days=6)
+        week_options.append(
+            {
+                "week": week,
+                "start": start,
+                "end": end,
+                "label": f"Semaine {week} - du lundi {start.strftime('%d/%m/%Y')} au dimanche {end.strftime('%d/%m/%Y')}",
+            }
+        )
+
+    availability_rows = (
+        Availability.objects.filter(date__range=(week_start, week_end))
+        .values("volunteer_id", "date")
+        .annotate(start=Min("start_time"), end=Max("end_time"))
+    )
+    availability_map = defaultdict(dict)
+    for row in availability_rows:
+        availability_map[row["volunteer_id"]][row["date"]] = (row["start"], row["end"])
+
+    unavailability_rows = Unavailability.objects.filter(date__range=(week_start, week_end)).values(
+        "volunteer_id",
+        "date",
+    )
+    unavailability_map = defaultdict(set)
+    for row in unavailability_rows:
+        unavailability_map[row["volunteer_id"]].add(row["date"])
+
+    profiles = VolunteerProfile.objects.select_related("user").order_by("user__last_name", "user__first_name")
+    recap_rows = []
+    for profile in profiles:
+        days = []
+        for day in week_days:
+            date_value = day["date"]
+            availability = availability_map.get(profile.id, {}).get(date_value)
+            if availability:
+                start_time, end_time = availability
+                days.append(
+                    {
+                        "status": "available",
+                        "start": start_time.strftime("%Hh%M"),
+                        "end": end_time.strftime("%Hh%M"),
+                    }
+                )
+                continue
+            if date_value in unavailability_map.get(profile.id, set()):
+                days.append(
+                    {
+                        "status": "unavailable",
+                        "start": "--",
+                        "end": "--",
+                    }
+                )
+                continue
+            days.append(
+                {
+                    "status": "empty",
+                    "start": "",
+                    "end": "",
+                }
+            )
+        recap_rows.append(
+            {
+                "name": profile.user.full_name,
+                "days": days,
+            }
+        )
+
+    return render(
+        request,
+        "volunteers/availability_recap.html",
+        {
+            "profile": _get_profile(request.user),
+            "week_start": week_start,
+            "week_end": week_end,
+            "week_number": week_number,
+            "week_year": week_year,
+            "week_days": week_days,
+            "week_options": week_options,
+            "recap_rows": recap_rows,
+        },
+    )
+
+
+@login_required
 def availability_create(request):
     profile = _get_profile(request.user)
     if not profile:
@@ -176,11 +282,19 @@ def availability_create(request):
         if formset.is_valid():
             created = 0
             for form in formset:
-                if form.cleaned_data.get("availability") != "available":
+                availability_choice = form.cleaned_data.get("availability")
+                date_value = form.cleaned_data.get("date")
+                if availability_choice != "available":
+                    if date_value:
+                        Availability.objects.filter(volunteer=profile, date=date_value).delete()
+                        Unavailability.objects.update_or_create(volunteer=profile, date=date_value)
                     continue
+                if date_value:
+                    Availability.objects.filter(volunteer=profile, date=date_value).delete()
+                    Unavailability.objects.filter(volunteer=profile, date=date_value).delete()
                 Availability.objects.create(
                     volunteer=profile,
-                    date=form.cleaned_data["date"],
+                    date=date_value,
                     start_time=form.cleaned_data["start_time"],
                     end_time=form.cleaned_data["end_time"],
                 )
@@ -223,7 +337,8 @@ def availability_update(request, pk: int):
     if request.method == "POST":
         form = AvailabilityForm(request.POST, instance=availability, volunteer=profile)
         if form.is_valid():
-            form.save()
+            availability = form.save()
+            Unavailability.objects.filter(volunteer=profile, date=availability.date).delete()
             messages.success(request, "Disponibilite mise a jour.")
             return redirect("volunteer-availabilities")
     else:

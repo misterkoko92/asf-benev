@@ -230,14 +230,4 @@ class AvailabilityWeekForm(forms.Form):
             self.add_error("end_time", "L'heure de fin doit etre apres l'heure de debut.")
             return cleaned
 
-        if self.volunteer and date:
-            overlaps = Availability.objects.filter(
-                volunteer=self.volunteer,
-                date=date,
-                start_time__lt=end,
-                end_time__gt=start,
-            )
-            if overlaps.exists():
-                raise forms.ValidationError("Cette plage horaire chevauche une disponibilite existante.")
-
         return cleaned

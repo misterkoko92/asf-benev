@@ -71,3 +71,19 @@ class Availability(models.Model):
         ).exclude(pk=self.pk)
         if overlaps.exists():
             raise ValidationError("Cette plage horaire chevauche une disponibilite existante.")
+
+
+class Unavailability(models.Model):
+    volunteer = models.ForeignKey(VolunteerProfile, on_delete=models.CASCADE, related_name="unavailabilities")
+    date = models.DateField()
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["volunteer", "date"], name="unique_unavailability_per_day"),
+        ]
+        ordering = ["date"]
+
+    def __str__(self) -> str:
+        return f"Indisponible {self.volunteer.volunteer_id} {self.date}"
