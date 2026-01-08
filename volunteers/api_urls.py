@@ -1,11 +1,12 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .api import IntegrationAvailabilityViewSet, IntegrationVolunteerViewSet, availabilities_csv, volunteers_csv
+from .api import IntegrationAvailabilityViewSet, IntegrationEventViewSet, IntegrationVolunteerViewSet, availabilities_csv, volunteers_csv
 
 router = DefaultRouter()
 router.register("integrations/volunteers", IntegrationVolunteerViewSet, basename="integration-volunteers")
 router.register("integrations/availabilities", IntegrationAvailabilityViewSet, basename="integration-availabilities")
+router.register("integrations/events", IntegrationEventViewSet, basename="integration-events")
 
 urlpatterns = [
     path("", include(router.urls)),

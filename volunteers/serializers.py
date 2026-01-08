@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Availability, VolunteerConstraint, VolunteerProfile
+from .models import Availability, IntegrationEvent, VolunteerConstraint, VolunteerProfile
 
 
 class VolunteerConstraintSerializer(serializers.ModelSerializer):
@@ -51,3 +51,40 @@ class AvailabilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Availability
         fields = ["volunteer_id", "date", "start_time", "end_time"]
+
+
+class IntegrationEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IntegrationEvent
+        fields = [
+            "id",
+            "direction",
+            "source",
+            "target",
+            "event_type",
+            "external_id",
+            "payload",
+            "status",
+            "error_message",
+            "created_at",
+            "processed_at",
+        ]
+        read_only_fields = [
+            "id",
+            "direction",
+            "status",
+            "error_message",
+            "created_at",
+            "processed_at",
+        ]
+        extra_kwargs = {
+            "source": {"required": False},
+            "target": {"required": False},
+        }
+
+
+class IntegrationEventStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IntegrationEvent
+        fields = ["status", "error_message", "processed_at"]
+

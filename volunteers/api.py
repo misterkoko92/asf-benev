@@ -1,17 +1,24 @@
 import csv
 from datetime import datetime
 
+from django.conf import settings
 from django.http import HttpResponse
-from rest_framework import permissions, viewsets
+from django.utils import timezone
+from rest_framework import mixins, permissions, viewsets
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.exceptions import ValidationError
 
-from .models import Availability, VolunteerConstraint, VolunteerProfile
-from .serializers import AvailabilitySerializer, VolunteerProfileSerializer
+from .models import Availability, IntegrationDirection, IntegrationEvent, IntegrationStatus, VolunteerConstraint, VolunteerProfile
+from .serializers import AvailabilitySerializer, IntegrationEventSerializer, IntegrationEventStatusSerializer, VolunteerProfileSerializer
 
 
 class IsStaffUser(permissions.BasePermission):
     def has_permission(self, request, view):
+        api_key = getattr(settings, "INTEGRATION_API_KEY", "").strip()
+        request_key = request.headers.get("X-ASF-Integration-Key", "").strip()
+        if api_key and request_key == api_key:
+            return True
         return bool(request.user and request.user.is_authenticated and request.user.is_staff)
 
 
@@ -52,6 +59,62 @@ class IntegrationAvailabilityViewSet(viewsets.ReadOnlyModelViewSet):
             except ValueError:
                 pass
         return queryset
+
+
+class IntegrationEventViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
+    serializer_class = IntegrationEventSerializer
+    permission_classes = [IsStaffUser]
+    queryset = IntegrationEvent.objects.all()
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        direction = (self.request.query_params.get("direction") or "").strip()
+        if direction:
+            queryset = queryset.filter(direction=direction)
+        status_value = (self.request.query_params.get("status") or "").strip()
+        if status_value:
+            queryset = queryset.filter(status=status_value)
+        source = (self.request.query_params.get("source") or "").strip()
+        if source:
+            queryset = queryset.filter(source=source)
+        event_type = (self.request.query_params.get("event_type") or "").strip()
+        if event_type:
+            queryset = queryset.filter(event_type=event_type)
+        return queryset
+
+    def get_serializer_class(self):
+        if self.action in {"update", "partial_update"}:
+            return IntegrationEventStatusSerializer
+        return IntegrationEventSerializer
+
+    def perform_create(self, serializer):
+        source = (serializer.validated_data.get("source") or "").strip()
+        if not source:
+            source = (self.request.headers.get("X-ASF-Source") or "").strip()
+        if not source:
+            raise ValidationError({"source": "source is required"})
+        target = (serializer.validated_data.get("target") or "").strip()
+        if not target:
+            target = (self.request.headers.get("X-ASF-Target") or "").strip()
+        serializer.save(
+            source=source,
+            target=target,
+            direction=IntegrationDirection.INBOUND,
+            status=IntegrationStatus.PENDING,
+        )
+
+    def perform_update(self, serializer):
+        status_value = serializer.validated_data.get("status")
+        processed_at = serializer.validated_data.get("processed_at")
+        if status_value == IntegrationStatus.PROCESSED and processed_at is None:
+            serializer.save(processed_at=timezone.now())
+        else:
+            serializer.save()
 
 
 @api_view(["GET"])

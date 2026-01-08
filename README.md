@@ -99,7 +99,9 @@ Options :
 Colonnes attendues : `ID`, `NOM`, `PRENOM`, `PRENOM_COURT`, `MAX_JOURS_SEMAINE`, `MAX_EXP_SEMAINE`, `MAX_EXP_JOUR`, `ATTENTE_MAX_H`, `Telephone`, `Mail`.
 
 ## API d'integration
-Creer un compte technique staff (admin) et un token DRF :
+Option 1 (API key) : definir `INTEGRATION_API_KEY` et utiliser l'en-tete `X-ASF-Integration-Key`.
+
+Option 2 (token DRF) : creer un compte technique staff (admin) et un token DRF :
 ```bash
 python3 manage.py drf_create_token <email>
 ```
@@ -110,6 +112,9 @@ Endpoints principaux :
 - `GET /api/integrations/availabilities/?start=YYYY-MM-DD&end=YYYY-MM-DD`
 - `GET /api/integrations/volunteers.csv`
 - `GET /api/integrations/availabilities.csv?start=YYYY-MM-DD&end=YYYY-MM-DD`
+- `GET /api/integrations/events/`
+- `POST /api/integrations/events/`
+- `PATCH /api/integrations/events/{id}/`
 
 ## Mot de passe oublie
 Le lien est disponible sur l'ecran de connexion. Configurez l'envoi SMTP via les variables ci-dessus.

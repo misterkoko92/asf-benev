@@ -107,6 +107,8 @@ EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "0") == "1"
 EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "10"))
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@example.com")
 
+INTEGRATION_API_KEY = os.getenv("INTEGRATION_API_KEY", "").strip()
+
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")

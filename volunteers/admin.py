@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Availability, Unavailability, VolunteerConstraint, VolunteerProfile
+from .models import Availability, IntegrationEvent, Unavailability, VolunteerConstraint, VolunteerProfile
 
 
 class VolunteerConstraintInline(admin.StackedInline):
@@ -45,3 +45,19 @@ class UnavailabilityAdmin(admin.ModelAdmin):
     list_display = ("volunteer", "date")
     list_filter = ("date",)
     search_fields = ("volunteer__volunteer_id", "volunteer__user__email")
+
+
+@admin.register(IntegrationEvent)
+class IntegrationEventAdmin(admin.ModelAdmin):
+    list_display = (
+        "created_at",
+        "direction",
+        "source",
+        "target",
+        "event_type",
+        "status",
+    )
+    list_filter = ("direction", "status", "source", "event_type")
+    search_fields = ("source", "target", "event_type", "external_id")
+    readonly_fields = ("created_at", "processed_at")
+
